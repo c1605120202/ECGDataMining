@@ -23,7 +23,7 @@ def fill_missing_values(signal):
 
     return signal
 
-#这是验证好坏
+#这是验证集合好坏
 #这是测试集
 
 
