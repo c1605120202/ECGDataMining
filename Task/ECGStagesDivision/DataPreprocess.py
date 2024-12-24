@@ -21,11 +21,7 @@ def fill_missing_values(signal):
         x = np.arange(len(signal))
         signal[nans] = np.interp(x[nans], x[~nans], signal[~nans])
 
-    # 返回所有值为 '' 的索引
-    # empty_indices = np.where(signal == '')[0]
-    # if len(empty_indices)>0:
-    #     nans=empty_indices
-    #     x = np.arange(len(signal))
-    #     signal[nans] = np.interp(x[nans], x[~nans], signal[~nans])
-
     return signal
+
+
+#这是测试集
