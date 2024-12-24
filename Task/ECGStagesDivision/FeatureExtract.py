@@ -1,6 +1,8 @@
 import numpy as np
 import scipy.stats as st
 import pywt
+import antropy as ant
+
 from scipy.spatial.distance import cdist
 
 
@@ -167,5 +169,6 @@ def getFeature(signal_data):
     result.append(st.kurtosis(signal_data))  # 峰度
     # result.append(calculate_lyapunov_exponent(signal_data))  # Lyapunov指数
     # result.append(correlation_dimension(signal_data))  # 吸引子维数
-
+    result.append(ant.svd_entropy(signal_data,order=3,delay=1,normalize=True))       #计算svd分解熵
+    result.append(ant.sample_entropy(signal_data,order=3,delay=1,normalize=True))      #计算样本熵
     return result

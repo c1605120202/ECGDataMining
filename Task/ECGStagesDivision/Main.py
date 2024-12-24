@@ -19,7 +19,7 @@ DATA_PATH = "D:/Dataset/data"
 LABEL_PATH = "D:/Dataset/label"
 SUBJECT_NUM=100        #要读取的subject数量
 CROSS_VALIDATE_NUM=5     #表示几则交叉验证
-LSTM_TIME_STEPS=3     #算法时间步
+LSTM_TIME_STEPS=4     #算法时间步
 
 # 定义LSTM模型函数
 def create_lstm_model(input_shape, units=50, learning_rate=0.05):
@@ -177,7 +177,7 @@ if __name__ == "__main__":
     train_index, val_index = train_test_split([i for i in range(1, SUBJECT_NUM+1)], test_size=0.2, random_state=42)
 
     # 加载数据并进行预处理
-    train_data, train_label = load_data(train_index)
+    # train_data, train_label = load_data(train_index)
     val_data, val_label = load_data(val_index)
 
     # 计算训练集上的特征，给出特征标准化后的数据
@@ -197,7 +197,7 @@ if __name__ == "__main__":
                                     units=best_params['units'],
                                     learning_rate=best_params['learning_rate'])
     final_model.fit(X, y, epochs=50, batch_size=128, verbose=1)
-    final_model.save("final_model_features_100.h5")         #保存最终模型
+    final_model.save("final_model_features8_100.h5")             #保存最终模型
 
     # 对测试集上的数据进行预测
     y_pred = model_predict(final_model, val_data)
