@@ -1,7 +1,6 @@
 import numpy as np
 import scipy.stats as st
 import pywt
-import antropy as ant
 
 from scipy.spatial.distance import cdist
 
@@ -129,6 +128,64 @@ def compute_wavelet_coefficients(signal, wavelet='db4', level=3):
     coeffs = pywt.wavedec(signal, wavelet, level=level)
     return coeffs
 
+#计算svd熵
+
+def svd_entropy(time_series):
+    # 将时间序列转换为一个矩阵
+    # 这里我们通过嵌入一个时间延迟来创建一个二维矩阵
+    # 假设我们选择嵌入维度 m=3，时间延迟 d=1
+    m = 3
+    d = 1
+    N = len(time_series)
+
+    # 生成嵌入矩阵
+    X = np.array([time_series[i:i + m] for i in range(N - m)])
+
+    # 对嵌入矩阵进行SVD分解
+    U, S, Vt = np.linalg.svd(X, full_matrices=False)
+
+    # 归一化奇异值
+    S_norm = S / np.sum(S)
+
+    # 计算熵
+    entropy = -np.sum(S_norm * np.log(S_norm + np.finfo(float).eps))  # 加上eps防止log(0)
+
+    return entropy
+
+    """
+    计算样本熵（Sample Entropy）
+
+    time_series: 输入时间序列数据
+    m: 嵌入维度
+    r: 容差值，通常为时间序列标准差的20%
+    """
+def sample_entropy(time_series, m=2, r=0.2):
+
+    N = len(time_series)
+    norm = np.std(time_series)  # 使用标准差来衡量容差值的比例
+    r = r * norm
+
+    def _phi(m, r):
+        """计算给定m和r的匹配数"""
+        X = np.array([time_series[i:i + m] for i in range(N - m)])
+        matches = np.zeros(N - m)
+
+        for i in range(N - m):
+            for j in range(i + 1, N - m):
+                if np.all(np.abs(X[i] - X[j]) <= r):
+                    matches[i] += 1
+                    matches[j] += 1
+
+        return np.sum(matches) / (N - m)
+
+    # 计算phi(m) 和 phi(m+1)
+    phi_m = _phi(m, r)
+    phi_m1 = _phi(m + 1, r)
+
+    # 返回样本熵
+    if phi_m == 0:
+        return np.inf
+    return -np.log(phi_m1 / phi_m)
 
 # 拿到数据特征（每次输入一个二维数组signal_data）
 # 返回：[小波系数（取近似系数部分），偏度，峰度，Lyapunov指数，吸引子维数（Fractal Dimension）
@@ -169,6 +226,7 @@ def getFeature(signal_data):
     result.append(st.kurtosis(signal_data))  # 峰度
     # result.append(calculate_lyapunov_exponent(signal_data))  # Lyapunov指数
     # result.append(correlation_dimension(signal_data))  # 吸引子维数
-    result.append(ant.svd_entropy(signal_data,order=3,delay=1,normalize=True))       #计算svd分解熵
-    result.append(ant.sample_entropy(signal_data,order=3,delay=1,normalize=True))      #计算样本熵
+    result.append(svd_entropy(signal_data))       #计算svd分解熵
+    result.append(sample_entropy(signal_data))      #计算样本熵
+    print(result)
     return result

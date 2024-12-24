@@ -176,7 +176,7 @@ if __name__ == "__main__":
     train_index, val_index = train_test_split([i for i in range(1, SUBJECT_NUM+1)], test_size=0.2, random_state=42)
 
     # 加载数据并进行预处理
-    # train_data, train_label = load_data(train_index)
+    train_data, train_label = load_data(train_index)
     val_data, val_label = load_data(val_index)
 
     # 计算训练集上的特征，给出特征标准化后的数据
@@ -191,7 +191,6 @@ if __name__ == "__main__":
 
     # 使用最佳参数训练最终模型
     print("\n使用最佳参数训练最终模型...")
-    # 基于最优参数训练模型
     final_model = create_lstm_model(input_shape=(X.shape[1], X.shape[2]),
                                     units=best_params['units'],
                                     learning_rate=best_params['learning_rate'])
