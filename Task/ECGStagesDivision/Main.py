@@ -1,6 +1,5 @@
 import multiprocessing
 
-import numpy as np
 import scipy.io
 from tensorflow.keras.layers import LSTM, Dense
 from tensorflow.keras.models import Sequential, load_model
