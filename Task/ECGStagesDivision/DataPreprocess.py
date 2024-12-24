@@ -1,6 +1,7 @@
-#数据预处理，包括噪声和缺值处理
+# 数据预处理，包括噪声和缺值处理
 import numpy as np
 from scipy.signal import butter, filtfilt
+
 
 # 设计带通滤波器，数据的采样频率是200Hz
 def bandpass_filter(signal, lowcut=0.5, highcut=50, fs=200, order=1):
@@ -9,6 +10,7 @@ def bandpass_filter(signal, lowcut=0.5, highcut=50, fs=200, order=1):
     high = highcut / nyquist
     b, a = butter(order, [low, high], btype='band')
     return filtfilt(b, a, signal)
+
 
 # 去除信号中的缺失值
 def fill_missing_values(signal):

@@ -4,7 +4,8 @@ import pywt
 
 from scipy.spatial.distance import cdist
 
-#计算Lyapunov指数
+
+# 计算Lyapunov指数
 def calculate_lyapunov_exponent(ecg_data, delay=20, embedding_dim=5, max_iter=500, epsilon=1e-4):
     """
     计算 ECG 数据的最大 Lyapunov 指数。
@@ -67,7 +68,8 @@ def calculate_lyapunov_exponent(ecg_data, delay=20, embedding_dim=5, max_iter=50
     # 返回平均 Lyapunov 指数，无则返回0
     return np.mean(lyapunov_exponents) if lyapunov_exponents else 0
 
-#计算吸引子维数（关联维数）
+
+# 计算吸引子维数（关联维数）
 def correlation_dimension(time_series, m=2, tau=1, max_dist=None):
     """
     计算ECG信号的吸引子维数（使用Grassberger-Procaccia算法）
@@ -96,7 +98,8 @@ def correlation_dimension(time_series, m=2, tau=1, max_dist=None):
     D2 = np.polyfit(np.log(r), np.log(correlation), 1)[0]
     return D2
 
-#计算Petrosian分形维数
+
+# 计算Petrosian分形维数
 def petrosian_fd(time_series):
     N = len(time_series)
 
@@ -109,8 +112,9 @@ def petrosian_fd(time_series):
         return 0
     return np.log10(N) / (np.log10(N) + np.log10(N / N_v))
 
-#计算小波系数
-#coeffs 是一个 列表，包含了多层次的小波系数。具体来说，这个列表的第一个元素是低频部分
+
+# 计算小波系数
+# coeffs 是一个 列表，包含了多层次的小波系数。具体来说，这个列表的第一个元素是低频部分
 # （近似系数），后续的元素是不同分解层次的高频部分（细节系数）。
 def compute_wavelet_coefficients(signal, wavelet='db4', level=3):
     """
@@ -124,31 +128,104 @@ def compute_wavelet_coefficients(signal, wavelet='db4', level=3):
     coeffs = pywt.wavedec(signal, wavelet, level=level)
     return coeffs
 
-#拿到数据特征（每次输入一个二维数组signal_data）
-#返回：[小波系数（取近似系数部分），偏度，峰度，Lyapunov指数，吸引子维数（Fractal Dimension）
+#计算svd熵
+
+def svd_entropy(time_series):
+    # 将时间序列转换为一个矩阵
+    # 这里我们通过嵌入一个时间延迟来创建一个二维矩阵
+    # 假设我们选择嵌入维度 m=3，时间延迟 d=1
+    m = 3
+    d = 1
+    N = len(time_series)
+
+    # 生成嵌入矩阵
+    X = np.array([time_series[i:i + m] for i in range(N - m)])
+
+    # 对嵌入矩阵进行SVD分解
+    U, S, Vt = np.linalg.svd(X, full_matrices=False)
+
+    # 归一化奇异值
+    S_norm = S / np.sum(S)
+
+    # 计算熵
+    entropy = -np.sum(S_norm * np.log(S_norm + np.finfo(float).eps))  # 加上eps防止log(0)
+
+    return entropy
+
+    """
+    计算样本熵（Sample Entropy）
+
+    time_series: 输入时间序列数据
+    m: 嵌入维度
+    r: 容差值，通常为时间序列标准差的20%
+    """
+def sample_entropy(time_series, m=2, r=0.2):
+
+    N = len(time_series)
+    norm = np.std(time_series)  # 使用标准差来衡量容差值的比例
+    r = r * norm
+
+    def _phi(m, r):
+        """计算给定m和r的匹配数"""
+        X = np.array([time_series[i:i + m] for i in range(N - m)])
+        matches = np.zeros(N - m)
+
+        for i in range(N - m):
+            for j in range(i + 1, N - m):
+                if np.all(np.abs(X[i] - X[j]) <= r):
+                    matches[i] += 1
+                    matches[j] += 1
+
+        return np.sum(matches) / (N - m)
+
+    # 计算phi(m) 和 phi(m+1)
+    phi_m = _phi(m, r)
+    phi_m1 = _phi(m + 1, r)
+
+    # 返回样本熵
+    if phi_m == 0:
+        return np.inf
+    return -np.log(phi_m1 / phi_m)
+
+# 拿到数据特征（每次输入一个二维数组signal_data）
+# 返回：[小波系数（取近似系数部分），偏度，峰度，Lyapunov指数，吸引子维数（Fractal Dimension）
 # Petrosian分形维数,均值,标准差,中值] 组成的特征集合
 # 返回：numpy数组类型
-def getFeature(signal_datas):
-    #分别表示数据的行和列数
-    lines =signal_datas.shape[0]
-    rows =signal_datas.shape[1]
-    results=[]
-    for j in range(lines):
-        signal_data=signal_datas[j]
-        #存放单条数据的特征
-        result=[]
-        # result=list(compute_wavelet_coefficients(signal_data)[0])     #小波系数(取近似系数部分）
-        result.append(np.average(signal_data))    #均值
-        result.append(np.std(signal_data))        #标准差
-        result.append(petrosian_fd(signal_data))     #Petrosian分形维数
-        result.append(np.median(signal_data))     #中值
-        result.append(st.skew(signal_data))    #偏度
-        result.append(st.kurtosis(signal_data))   #峰度
-        result.append(calculate_lyapunov_exponent(signal_data))     #Lyapunov指数
-        result.append(correlation_dimension(signal_data))    #吸引子维数
-        results.append(result)
-        print(f"第{j}个：  {result}")
-        if j==99:
-            break
+# def getFeature(signal_datas):
+#     # 分别表示数据的行和列数
+#     lines = signal_datas.shape[0]
+#     rows = signal_datas.shape[1]
+#     results = []
+#     for j in range(lines):
+#         signal_data = signal_datas[j]
+#         # 存放单条数据的特征
+#         result = []
+#         # result=list(compute_wavelet_coefficients(signal_data)[0])     #小波系数(取近似系数部分）
+#         result.append(st.skew(signal_data))  # 偏度
+#         result.append(st.kurtosis(signal_data))  # 峰度
+#         # result.append(lyapunov_exponent(signal_data))  # Lyapunov指数
+#         # result.append(correlation_dimension(signal_data))  # 吸引子维数
+#         result.append(petrosian_fd(signal_data))  # Petrosian分形维数
+#         result.append(np.average(signal_data))  # 均值
+#         result.append(np.std(signal_data))  # 标准差
+#         result.append(np.median(signal_data))  # 中值
+#         results.append(result)
+#         print(f"第{j}个：  {result}")
+#         # if j == 99:
+#         #     break
+#
+#     return np.array(results)
 
-    return np.array(results)
+def getFeature(signal_data):
+    result = []
+    result.append(np.average(signal_data))  # 均值
+    result.append(np.std(signal_data))  # 标准差
+    result.append(petrosian_fd(signal_data))  # Petrosian分形维数
+    result.append(np.median(signal_data))  # 中值
+    result.append(st.skew(signal_data))  # 偏度
+    result.append(st.kurtosis(signal_data))  # 峰度
+    # result.append(calculate_lyapunov_exponent(signal_data))  # Lyapunov指数
+    # result.append(correlation_dimension(signal_data))  # 吸引子维数
+    result.append(svd_entropy(signal_data))       #计算svd分解熵
+    result.append(sample_entropy(signal_data))      #计算样本熵
+    return result
