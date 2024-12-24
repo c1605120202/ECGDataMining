@@ -176,28 +176,28 @@ if __name__ == "__main__":
     train_index, val_index = train_test_split([i for i in range(1, SUBJECT_NUM+1)], test_size=0.2, random_state=42)
 
     # 加载数据并进行预处理
-    # train_data, train_label = load_data(train_index)
+    train_data, train_label = load_data(train_index)
     val_data, val_label = load_data(val_index)
 
-    # # 计算训练集上的特征，给出特征标准化后的数据
-    # X = compute_features(train_data)
-    #
-    # # 转换X的数据格式，使其符合LSTM的数据规范
-    # X = X.reshape(X.shape[0], LSTM_TIME_STEPS, int(X.shape[1] / LSTM_TIME_STEPS))  # 设置时间步长为3
-    # y = train_label
-    #
-    # # 交叉验证获取训练集上最优模型参数
-    # best_params = cross_validate_lstm(X, y)
-    #
-    # # 使用最佳参数训练最终模型
-    # print("\n使用最佳参数训练最终模型...")
-    # final_model = create_lstm_model(input_shape=(X.shape[1], X.shape[2]),
-    #                                 units=best_params['units'],
-    #                                 learning_rate=best_params['learning_rate'])
-    # final_model.fit(X, y, epochs=50, batch_size=128, verbose=1)
-    # final_model.save("final_model_features8_100.h5")             #保存最终模型
+    # 计算训练集上的特征，给出特征标准化后的数据
+    X = compute_features(train_data)
+
+    # 转换X的数据格式，使其符合LSTM的数据规范
+    X = X.reshape(X.shape[0], LSTM_TIME_STEPS, int(X.shape[1] / LSTM_TIME_STEPS))  # 设置时间步长为3
+    y = train_label
+
+    # 交叉验证获取训练集上最优模型参数
+    best_params = cross_validate_lstm(X, y)
+
+    # 使用最佳参数训练最终模型
+    print("\n使用最佳参数训练最终模型...")
+    final_model = create_lstm_model(input_shape=(X.shape[1], X.shape[2]),
+                                    units=best_params['units'],
+                                    learning_rate=best_params['learning_rate'])
+    final_model.fit(X, y, epochs=50, batch_size=128, verbose=1)
+    final_model.save("final_model_features8_100.h5")             #保存最终模型
 
     # 对测试集上的数据进行预测
-    y_pred = model_predict(load_model("final_model_features6_100.h5"), val_data)
+    y_pred = model_predict(load_model("../../DataFile/best_final_model_features6_100.h5"), val_data)
 
     print(f"模型在测试集上的准确率为：{accuracy_score(val_label, y_pred)}")
