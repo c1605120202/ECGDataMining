@@ -11,7 +11,8 @@ from sklearn.model_selection import KFold
 from sklearn.metrics import accuracy_score
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.callbacks import EarlyStopping
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split：：
+
 
 # 文件根目录
 DATA_PATH = "D:/Dataset/data"

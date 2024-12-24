@@ -195,7 +195,35 @@ def permutation_entropy(time_series, m=3, delay=1):
     return entropy
 
 
-# 拿到数据特征（每次输入一个signal_data,30s 数据）
+# 拿到数据特征（每次输入一个二维数组signal_data）
+# 返回：[小波系数（取近似系数部分），偏度，峰度，Lyapunov指数，吸引子维数（Fractal Dimension）
+# Petrosian分形维数,均值,标准差,中值] 组成的特征集合
+# 返回：numpy数组类型
+def getFeature(signal_datas):
+    # 分别表示数据的行和列数
+    lines = signal_datas.shape[0]
+    rows = signal_datas.shape[1]
+    results = []
+    for j in range(lines):
+        signal_data = signal_datas[j]
+        # 存放单条数据的特征
+        result = []
+        # result=list(compute_wavelet_coefficients(signal_data)[0])     #小波系数(取近似系数部分）
+        result.append(st.skew(signal_data))  # 偏度
+        result.append(st.kurtosis(signal_data))  # 峰度
+        # result.append(lyapunov_exponent(signal_data))  # Lyapunov指数
+        # result.append(correlation_dimension(signal_data))  # 吸引子维数
+        result.append(petrosian_fd(signal_data))  # Petrosian分形维数
+        result.append(np.average(signal_data))  # 均值
+        result.append(np.std(signal_data))  # 标准差
+        result.append(np.median(signal_data))  # 中值
+        results.append(result)
+        print(f"第{j}个：  {result}")
+        # if j == 99:
+        #     break
+
+    return np.array(results)
+
 def getFeature(signal_data):
     result = []
     result.append(np.average(signal_data))  # 均值
