@@ -16,7 +16,7 @@ from sklearn.model_selection import train_test_split
 # 文件根目录
 DATA_PATH = "D:/Dataset/data"
 LABEL_PATH = "D:/Dataset/label"
-SUBJECT_NUM=100        #要读取的subject数量
+SUBJECT_NUM=2        #要读取的subject数量
 CROSS_VALIDATE_NUM=5     #表示几则交叉验证
 LSTM_TIME_STEPS=4     #算法时间步
 

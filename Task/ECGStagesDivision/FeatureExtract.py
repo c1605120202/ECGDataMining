@@ -152,40 +152,44 @@ def svd_entropy(time_series):
 
     return entropy
 
-    """
-    计算样本熵（Sample Entropy）
 
-    time_series: 输入时间序列数据
-    m: 嵌入维度
-    r: 容差值，通常为时间序列标准差的20%
-    """
-def sample_entropy(time_series, m=2, r=0.2):
+"""
+   计算排列熵（Permutation Entropy）值
+
+   time_series: 输入的时间序列数据（1D数组）
+   m: 嵌入维度（通常为2或3）
+   delay: 时间延迟（通常为1）
+   """
+def permutation_entropy(time_series, m=3, delay=1):
 
     N = len(time_series)
-    norm = np.std(time_series)  # 使用标准差来衡量容差值的比例
-    r = r * norm
 
-    def _phi(m, r):
-        """计算给定m和r的匹配数"""
-        X = np.array([time_series[i:i + m] for i in range(N - m)])
-        matches = np.zeros(N - m)
+    if N <= m:
+        raise ValueError("时间序列长度应大于嵌入维度m")
 
-        for i in range(N - m):
-            for j in range(i + 1, N - m):
-                if np.all(np.abs(X[i] - X[j]) <= r):
-                    matches[i] += 1
-                    matches[j] += 1
+    # 生成嵌入子序列
+    embedded_series = [time_series[i:i + m] for i in range(0, N - m + 1, delay)]
 
-        return np.sum(matches) / (N - m)
+    # 计算每个子序列的排列模式
+    permutations = []
+    for subseq in embedded_series:
+        # 获取排列顺序
+        order = np.argsort(subseq)
+        permutation = tuple(order)  # 将顺序转换为元组
+        permutations.append(permutation)
 
-    # 计算phi(m) 和 phi(m+1)
-    phi_m = _phi(m, r)
-    phi_m1 = _phi(m + 1, r)
+    # 统计每个排列模式的出现频率
+    permutation_counts = Counter(permutations)
+    total_permutations = len(permutations)
 
-    # 返回样本熵
-    if phi_m == 0:
-        return np.inf
-    return -np.log(phi_m1 / phi_m)
+    # 计算排列模式的概率分布
+    probabilities = [count / total_permutations for count in permutation_counts.values()]
+
+    # 计算排列熵
+    nums=[p * np.log(p) for p in probabilities if p > 0]
+    entropy = -np.sum(nums)
+
+    return entropy
 
 # 拿到数据特征（每次输入一个二维数组signal_data）
 # 返回：[小波系数（取近似系数部分），偏度，峰度，Lyapunov指数，吸引子维数（Fractal Dimension）
@@ -227,6 +231,6 @@ def getFeature(signal_data):
     # result.append(calculate_lyapunov_exponent(signal_data))  # Lyapunov指数
     # result.append(correlation_dimension(signal_data))  # 吸引子维数
     result.append(svd_entropy(signal_data))       #计算svd分解熵
-    result.append(sample_entropy(signal_data))      #计算样本熵
+    result.append(permutation_entropy(signal_data))      #计算排列熵
     print(result)
     return result
