@@ -3,6 +3,7 @@ import scipy.stats as st
 import pywt
 
 from scipy.spatial.distance import cdist
+from collections import Counter
 
 
 # 计算Lyapunov指数
@@ -128,7 +129,8 @@ def compute_wavelet_coefficients(signal, wavelet='db4', level=3):
     coeffs = pywt.wavedec(signal, wavelet, level=level)
     return coeffs
 
-#计算svd熵
+
+# 计算svd熵
 
 def svd_entropy(time_series):
     # 将时间序列转换为一个矩阵
@@ -160,8 +162,9 @@ def svd_entropy(time_series):
    m: 嵌入维度（通常为2或3）
    delay: 时间延迟（通常为1）
    """
-def permutation_entropy(time_series, m=3, delay=1):
 
+
+def permutation_entropy(time_series, m=3, delay=1):
     N = len(time_series)
 
     if N <= m:
@@ -186,10 +189,11 @@ def permutation_entropy(time_series, m=3, delay=1):
     probabilities = [count / total_permutations for count in permutation_counts.values()]
 
     # 计算排列熵
-    nums=[p * np.log(p) for p in probabilities if p > 0]
+    nums = [p * np.log(p) for p in probabilities if p > 0]
     entropy = -np.sum(nums)
 
     return entropy
+
 
 # 拿到数据特征（每次输入一个二维数组signal_data）
 # 返回：[小波系数（取近似系数部分），偏度，峰度，Lyapunov指数，吸引子维数（Fractal Dimension）
@@ -230,7 +234,7 @@ def getFeature(signal_data):
     result.append(st.kurtosis(signal_data))  # 峰度
     # result.append(calculate_lyapunov_exponent(signal_data))  # Lyapunov指数
     # result.append(correlation_dimension(signal_data))  # 吸引子维数
-    result.append(svd_entropy(signal_data))       #计算svd分解熵
-    result.append(permutation_entropy(signal_data))      #计算排列熵
-    print(result)
+    # result.append(svd_entropy(signal_data))  # 计算svd分解熵
+    # result.append(permutation_entropy(signal_data))  # 计算排列熵
+    # print(result)
     return result
