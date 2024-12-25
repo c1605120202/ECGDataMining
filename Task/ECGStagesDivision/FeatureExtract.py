@@ -234,3 +234,5 @@ def getFeature(signal_data):
     result.append(st.kurtosis(signal_data))  # 峰度
 
     return result
+
+#测试1
