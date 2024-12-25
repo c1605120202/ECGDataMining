@@ -1,9 +1,11 @@
 import numpy as np
 import scipy.stats as st
-import pywt
+
 
 from scipy.spatial.distance import cdist
 from collections import Counter
+
+from sklearn.preprocessing import StandardScaler
 
 
 # 计算Lyapunov指数
@@ -114,22 +116,6 @@ def petrosian_fd(time_series):
     return np.log10(N) / (np.log10(N) + np.log10(N / N_v))
 
 
-# 计算小波系数
-# coeffs 是一个 列表，包含了多层次的小波系数。具体来说，这个列表的第一个元素是低频部分
-# （近似系数），后续的元素是不同分解层次的高频部分（细节系数）。
-def compute_wavelet_coefficients(signal, wavelet='db4', level=3):
-    """
-    计算ECG信号的小波系数
-    :param signal: 输入ECG信号（1D数组）
-    :param wavelet: 选择的小波函数（如'db4', 'sym4'等）
-    :param level: 小波分解的层数
-    :return: 小波分解的系数列表
-    """
-    # 使用小波变换进行分解
-    coeffs = pywt.wavedec(signal, wavelet, level=level)
-    return coeffs
-
-
 # 计算svd熵
 
 def svd_entropy(time_series):
@@ -205,34 +191,34 @@ def getFeature(signal_datas):
     rows = signal_datas.shape[1]
     results = []
     for j in range(lines):
-        signal_data = signal_datas[j]
+        line_data = signal_datas[j]
         # 存放单条数据的特征
         result = []
-        # result=list(compute_wavelet_coefficients(signal_data)[0])     #小波系数(取近似系数部分）
-        result.append(st.skew(signal_data))  # 偏度
-        result.append(st.kurtosis(signal_data))  # 峰度
-        # result.append(lyapunov_exponent(signal_data))  # Lyapunov指数
-        # result.append(correlation_dimension(signal_data))  # 吸引子维数
-        result.append(petrosian_fd(signal_data))  # Petrosian分形维数
-        result.append(np.average(signal_data))  # 均值
-        result.append(np.std(signal_data))  # 标准差
-        result.append(np.median(signal_data))  # 中值
+        #200hz对应30s
+        for i in range(30):
+            signal_data = signal_datas[j,i * 200:(i + 1) * 200]
+            result.append(np.average(signal_data))  # 均值
+            result.append(np.std(signal_data))  # 标准差
+            result.append(petrosian_fd(signal_data))  # Petrosian分形维数
+            result.append(np.median(signal_data))  # 中值
+            result.append(st.skew(signal_data))  # 偏度
+            result.append(st.kurtosis(signal_data))  # 峰度
         results.append(result)
-        print(f"第{j}个：  {result}")
-        # if j == 99:
-        #     break
-
+        print(f"{j}/{lines}")
     return np.array(results)
 
-def getFeature(signal_data):
-    result = []
-    result.append(np.average(signal_data))  # 均值
-    result.append(np.std(signal_data))  # 标准差
-    result.append(petrosian_fd(signal_data))  # Petrosian分形维数
-    result.append(np.median(signal_data))  # 中值
-    result.append(st.skew(signal_data))  # 偏度
-    result.append(st.kurtosis(signal_data))  # 峰度
 
-    return result
+# 使用多进程计算原始数据的特征,并进行标准化处理
+def compute_features(data):
+    features = getFeature(data)
+    features = np.array(features)
 
-#测试1
+    print(features.shape)
+
+    # 输出特征excel
+    # df=pd.DataFrame(features)
+    # df.to_excel(f"../../DataFile/{file_name}.xlsx",index=False)
+    # 对特征进行标准化
+    scaler = StandardScaler()
+    X = scaler.fit_transform(features)
+    return X

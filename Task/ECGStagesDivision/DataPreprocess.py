@@ -22,9 +22,3 @@ def fill_missing_values(signal):
         signal[nans] = np.interp(x[nans], x[~nans], signal[~nans])
 
     return signal
-
-#这是验证集合好坏1的大事
-#这是测试集
-#大啊大大
-
-#dahsadjkd
