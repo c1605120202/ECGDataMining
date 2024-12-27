@@ -5,6 +5,7 @@ from Task.ECGStagesDivision.Evaluate import *
 from Task.ECGStagesDivision.FeatureExtract import *
 
 from sklearn.model_selection import train_test_split
+from tensorflow.keras.models import load_model
 
 from Task.ECGStagesDivision.LSTMCrossValidate import create_lstm_model, cross_validate_lstm
 
@@ -57,7 +58,7 @@ def load_data(index_list):
 
     # 缺失值处理 --> 滤波处理(去噪）
     signal_data = fill_missing_values(np.ravel(data))  # 处理缺失值
-    # signal_data = bandpass_filter(signal_data)  # 滤波
+    signal_data = bandpass_filter(signal_data)  # 滤波
     data = signal_data.reshape(data.shape[0], data.shape[1])
     return data, label
 

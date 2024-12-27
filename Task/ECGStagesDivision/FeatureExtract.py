@@ -1,7 +1,6 @@
 import numpy as np
 import scipy.stats as st
 
-
 from scipy.spatial.distance import cdist
 from collections import Counter
 
@@ -148,8 +147,6 @@ def svd_entropy(time_series):
    m: 嵌入维度（通常为2或3）
    delay: 时间延迟（通常为1）
    """
-
-
 def permutation_entropy(time_series, m=3, delay=1):
     N = len(time_series)
 
@@ -182,8 +179,7 @@ def permutation_entropy(time_series, m=3, delay=1):
 
 
 # 拿到数据特征（每次输入一个二维数组signal_data）
-# 返回：[小波系数（取近似系数部分），偏度，峰度，Lyapunov指数，吸引子维数（Fractal Dimension）
-# Petrosian分形维数,均值,标准差,中值] 组成的特征集合
+# 返回：[偏度，峰度， Petrosian分形维数,均值,标准差,中值] 组成的特征集合
 # 返回：numpy数组类型
 def getFeature(signal_datas):
     # 分别表示数据的行和列数
@@ -191,7 +187,6 @@ def getFeature(signal_datas):
     rows = signal_datas.shape[1]
     results = []
     for j in range(lines):
-        line_data = signal_datas[j]
         # 存放单条数据的特征
         result = []
         #200hz对应30s
@@ -203,8 +198,11 @@ def getFeature(signal_datas):
             result.append(np.median(signal_data))  # 中值
             result.append(st.skew(signal_data))  # 偏度
             result.append(st.kurtosis(signal_data))  # 峰度
+            result.append(permutation_entropy(signal_data))   #排列熵
+            result.append(svd_entropy(signal_data))    #svd熵
+            result.append(correlation_dimension(signal_data))    #吸引子维数
         results.append(result)
-        print(f"{j}/{lines}")
+        print(f"{j}/{lines}    {result}")
     return np.array(results)
 
 
@@ -215,9 +213,6 @@ def compute_features(data):
 
     print(features.shape)
 
-    # 输出特征excel
-    # df=pd.DataFrame(features)
-    # df.to_excel(f"../../DataFile/{file_name}.xlsx",index=False)
     # 对特征进行标准化
     scaler = StandardScaler()
     X = scaler.fit_transform(features)

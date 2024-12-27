@@ -1,7 +1,8 @@
 import numpy as np
 # import seaborn as sns
 from matplotlib import pyplot as plt
-from sklearn.metrics import accuracy_score, confusion_matrix, classification_report, precision_recall_curve, f1_score
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report, precision_recall_curve, f1_score, \
+    average_precision_score
 
 from Task.ECGStagesDivision.Main import compute_features, LSTM_TIME_STEPS
 
@@ -24,33 +25,32 @@ def evaluate(final_model, val_data, val_label):
     print("Confusion Matrix:")
     print(conf_matrix)
 
+    # **3. 绘制P-R曲线
+    y_scores = y_pred_prob
+    y_test = val_label
+
+    # 计算每个类别的精确率和召回率
+    precision = dict()
+    recall = dict()
+    average_precision = dict()
+    for i in range(y_scores.shape[1]):
+        precision[i], recall[i], _ = precision_recall_curve(y_test == i, y_scores[:, i])
+        average_precision[i] = average_precision_score(y_test == i, y_scores[:, i], average='macro')
+
+    plt.figure(figsize=(8, 6))
+    for i in range(y_scores.shape[1]):
+        plt.plot(recall[i], precision[i], label=f'Class {i} (AP = {average_precision[i]:.2f})')
+
+    plt.xlabel('Recall')
+    plt.ylabel('Precision')
+    plt.title('Precision-Recall curve for multi-class')
+    plt.legend()
+    plt.show()
+
     # **4. F1 评价指标**
-    f1 = f1_score(val_label, y_pred)
+    f1 = f1_score(val_label, y_pred,average="macro")
     print(f"F1 Score: {f1:.4f}")
 
     # **5. Classification Report**
     print("Classification Report:")
     print(classification_report(val_label, y_pred))
-
-    # 可视化混淆矩阵
-    plt.figure(figsize=(6, 6))
-    # sns.heatmap(conf_matrix, annot=True, fmt="d", cmap="Blues")
-    plt.xlabel("Predicted Label")
-    plt.ylabel("True Label")
-    plt.title("Confusion Matrix")
-    plt.show()
-
-    # **3. P-R 曲线**
-    precision, recall, _ = precision_recall_curve(val_label, y_pred_prob)
-
-    # 绘制 P-R 曲线
-    plt.figure(figsize=(8, 6))
-    plt.plot(recall, precision, label="P-R Curve")
-    plt.xlabel("Recall")
-    plt.ylabel("Precision")
-    plt.title("Precision-Recall Curve")
-    plt.legend()
-    plt.grid()
-    plt.show()
-
-
